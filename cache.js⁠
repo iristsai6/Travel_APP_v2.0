@@ -1,1 +1,60 @@
 // (效能優化)：LocalStorage 快取管理，實現 Stale-While-Revalidate (SWR) 機制
+/**
+ * cache.js
+ * 封裝 LocalStorage 進行離線資料暫存、快取過期檢驗與快取讀寫控管。
+ */
+
+const CACHE_PREFIX = "TRAVEL_APP_CACHE_";
+const DEFAULT_EXPIRY_MS = 10 * 60 * 1000; // 預設快取有效時間 10 分鐘
+
+/**
+ * 寫入快取資料項目
+ * @param {string} key - 快取識別鍵
+ * @param {any} data - 欲寫入的任意 JSON 資料
+ * @param {number} ttl - 生存時間 (毫秒)
+ */
+export function setCacheItem(key, data, ttl = DEFAULT_EXPIRY_MS) {
+    const cachePayload = {
+        value: data,
+        expiry: Date.now() + ttl
+    };
+    localStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify(cachePayload));
+}
+
+/**
+ * 讀取快取項目 (若過期則回傳 null，並保持完整結構)
+ * @param {string} key - 快取識別鍵
+ * @returns {any|null} 快取的原始資料或 null
+ */
+export function getCacheItem(key) {
+    const rawData = localStorage.getItem(`${CACHE_PREFIX}${key}`);
+    if (!rawData) return null;
+
+    try {
+        const item = JSON.parse(rawData);
+        if (Date.now() > item.expiry) {
+            // 已過期自動清除，維持存儲空間整潔
+            localStorage.removeItem(`${CACHE_PREFIX}${key}`);
+            return null;
+        }
+        return item.value;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * 清除系統內指定之快取項目
+ */
+export function removeCacheItem(key) {
+    localStorage.removeItem(`${CACHE_PREFIX}${key}`);
+}
+
+/**
+ * 全局清空所有 Travel App 相關之本地快取
+ */
+export function clearAllApplicationCache() {
+    Object.keys(localStorage)
+        .filter(key => key.startsWith(CACHE_PREFIX))
+        .forEach(key => localStorage.removeItem(key));
+}
