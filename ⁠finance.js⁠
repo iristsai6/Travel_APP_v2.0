@@ -12,6 +12,7 @@ import { calculateSplitwiseDebts } from "./algorithm.js";
 /**
  * 財務分帳首頁渲染主要入口
  */
+
 export async function renderFinancePage(container, currentUser) {
     container.innerHTML = `
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
@@ -67,6 +68,7 @@ export async function renderFinancePage(container, currentUser) {
 /**
  * 刷新財務計算結果與對帳單
  */
+
 export function refreshFinanceData(groupId) {
     const debtContainer = document.getElementById("splitwise-debts-list");
     const timelineContainer = document.getElementById("expenses-timeline");
