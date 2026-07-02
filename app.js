@@ -201,3 +201,30 @@ function setupGlobalThemeController() {
 
 // 綁定全域 DOM 載入事件啟動核心
 document.addEventListener("DOMContentLoaded", initializeApplication);
+
+
+// 路由表配置
+const routes = {
+    "#home": renderHomePage,
+    "#itinerary": renderItineraryPage,
+    "#map": renderMapPage,
+    "#finance": renderFinancePage
+};
+
+// 路由掛載引擎
+function router() {
+    const hash = window.location.hash || "#home";
+    const container = document.getElementById("app-root");
+    
+    // 檢查路由是否存在，若無則預設導向 Home
+    const routeFunc = routes[hash] || renderHomePage;
+    
+    // 執行對應頁面渲染
+    routeFunc(container);
+}
+
+// 監聽 URL 變更與頁面載入
+window.addEventListener("hashchange", router);
+window.addEventListener("load", router);
+
+
