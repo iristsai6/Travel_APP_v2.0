@@ -1,1 +1,123 @@
 // (工具庫)：通用 UI 控制器（Modal、Toast、Loading 狀態）、格式化工具
+/**
+ * utils.js
+ * 全域公用工具庫。管轄 Apple / Material Design 風格之
+ * Toast 提示、Modal 視窗、全域 Loading 面板與動態 Skeleton 骨架屏渲染。
+ */
+
+/**
+ * 1. 彈出 Apple 風格的精美模糊 Toast 提示訊息
+ * @param {string} message - 提示內文
+ * @param {'success' | 'error' | 'warning' | 'info'} type - 提示種類
+ */
+export function showToast(message, type = 'info') {
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    // 注入高級 Glassmorphism 融合 Tailwind 樣式
+    toast.className = `apple-toast p-4 rounded-2xl shadow-xl flex items-center space-x-3 text-sm border border-white/20 transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto`;
+    
+    // 依種類指派圖示
+    const iconMap = { success: "✅", error: "🚨", warning: "⚠️", info: "ℹ️" };
+    toast.innerHTML = `
+        <span class="text-base">${iconMap[type]}</span>
+        <div class="flex-1 font-medium text-slate-800 dark:text-zinc-200">${message}</div>
+    `;
+
+    container.appendChild(toast);
+
+    // 觸發進場過渡動畫
+    setTimeout(() => {
+        toast.classList.remove("translate-y-4", "opacity-0");
+    }, 10);
+
+    // 3.5秒後自動退場移除
+    setTimeout(() => {
+        toast.classList.add("opacity-0", "translate-y-2");
+        toast.addEventListener("transitionend", () => toast.remove());
+    }, 3500);
+}
+
+/**
+ * 2. 開啟全域高階彈出視窗 (Modal Component)
+ */
+export function openModal(htmlContent) {
+    const root = document.getElementById("global-modal-root");
+    const body = document.getElementById("global-modal-content");
+    if (!root || !body) return;
+
+    body.innerHTML = htmlContent;
+    root.classList.remove("opacity-0", "pointer-events-none");
+    body.classList.remove("scale-95");
+}
+
+/**
+ * 3. 關閉全域彈出視窗
+ */
+export function closeModal() {
+    const root = document.getElementById("global-modal-root");
+    const body = document.getElementById("global-modal-content");
+    if (!root || !body) return;
+
+    root.classList.add("opacity-0", "pointer-events-none");
+    body.classList.add("scale-95");
+}
+
+/**
+ * 4. 控制全局滿版讀取遮罩 (Global Loading)
+ * @param {boolean} show - 顯示或隱藏
+ * @param {string} text - 提示文字
+ */
+export function toggleGlobalLoading(show, text = "請稍候...") {
+    const overlay = document.getElementById("global-loading-overlay");
+    const textNode = document.getElementById("global-loading-text");
+    if (!overlay) return;
+
+    if (show) {
+        if (textNode) textNode.innerText = text;
+        overlay.classList.remove("opacity-0", "pointer-events-none");
+    } else {
+        overlay.classList.add("opacity-0", "pointer-events-none");
+    }
+}
+
+/**
+ * 5. 動態骨架屏 HTML 工廠 (Skeleton Component)
+ * @param {'dashboard' | 'list' | 'profile'} type 骨架樣式種類
+ * @returns {string} HTML 結構字串
+ */
+export function renderSkeleton(type) {
+    if (type === 'dashboard') {
+        return `
+            <div class="space-y-6 w-full animate-pulse">
+                <div class="h-48 shimmer-bg rounded-3xl w-full"></div>
+                <div class="h-20 shimmer-bg rounded-2xl w-full"></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="h-32 shimmer-bg rounded-2xl"></div>
+                    <div class="h-32 shimmer-bg rounded-2xl"></div>
+                </div>
+            </div>
+        `;
+    }
+    // 預設列表型骨架
+    return `
+        <div class="space-y-3 w-full animate-pulse">
+            <div class="h-12 shimmer-bg rounded-xl w-3/4"></div>
+            <div class="h-24 shimmer-bg rounded-2xl w-full"></div>
+            <div class="h-24 shimmer-bg rounded-2xl w-full"></div>
+        </div>
+    `;
+}
+
+/**
+ * 6. XSS 安全字串過濾與轉義防止工具
+ */
+export function escapeHtml(unsafeStr) {
+    return unsafeStr
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
