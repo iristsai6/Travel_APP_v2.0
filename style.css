@@ -1,0 +1,112 @@
+/* 自訂全域樣式與非 Tailwind 原生支援之動畫 */
+
+/* 基礎重設與安全區域處理 */
+:root {
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
+}
+
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 自訂 Glassmorphism 磨砂玻璃特效面板 */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.dark .glass-panel {
+    background: rgba(24, 24, 27, 0.55);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(63, 63, 70, 0.3);
+}
+
+/* 蘋果風格模糊 Toast 彈窗 */
+.apple-toast {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.08), 0 2px 8px -1px rgba(0, 0, 0, 0.04);
+}
+
+.dark .apple-toast {
+    background: rgba(39, 39, 42, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* 拖曳項目過渡狀態樣式 */
+.dragging {
+    opacity: 0.4;
+    transform: scale(0.98);
+    border-style: dashed !important;
+}
+
+.drag-over {
+    border-top: 4px solid #f97316 !important;
+    transition: border-top 0.15s ease-in-out;
+}
+
+/* 定位點呼吸燈環形動畫 */
+@keyframes pulse-ring {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(2.2);
+        opacity: 0;
+    }
+}
+
+.gps-pulse-ring {
+    animation: pulse-ring 2.5s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+}
+
+/* 骨架屏閃爍光影特效 */
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.shimmer-bg {
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}
+
+.dark .shimmer-bg {
+    background: linear-gradient(90deg, #27272a 25%, #3f3f46 50%, #27272a 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}
+
+/* 自訂拉條樣式優化 */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+}
