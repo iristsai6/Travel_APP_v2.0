@@ -1,0 +1,5 @@
+<script>
+  // 將請求路徑轉為 hash 並重新導向
+  sessionStorage.redirect = location.href;
+  location.replace(location.pathname.split('/').slice(0, -1).join('/') + '/');
+</script>
