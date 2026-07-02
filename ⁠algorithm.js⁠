@@ -1,1 +1,166 @@
 // (邏輯核心)：處理如分帳計算、行程最佳化等純函式邏輯
+/**
+ * algorithm.js
+ */
+
+/**
+ * 1. 旅行倒數計時器演算法 (精確計算天、時、分、秒)
+ * @param {string} targetDateStr - 目標出發日期 (YYYY-MM-DD)
+ * @param {HTMLElement} displayContainer - 要渲染注入的時間容器
+ */
+export function startCountdownTimer(targetDateStr, displayContainer) {
+    function updateClock() {
+        const total = Date.parse(targetDateStr) - Date.parse(new Date().toString());
+        if (total <= 0) {
+            displayContainer.innerHTML = `<div class="col-span-4 text-center font-bold text-orange-400 py-2">🎉 旅程今天正式出發囉！</div>`;
+            clearInterval(timeinterval);
+            return;
+        }
+        
+        const seconds = Math.floor((total / 1000) % 60);
+        const minutes = Math.floor((total / 1000 / 60) % 60);
+        const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
+        const days = Math.floor(total / (1000 * 60 * 60 * 24));
+
+        displayContainer.innerHTML = `
+            <div class="bg-white/10 p-3 rounded-xl text-center"><span class="block text-xl font-black">${days}</span><span class="text-[10px] opacity-60">天</span></div>
+            <div class="bg-white/10 p-3 rounded-xl text-center"><span class="block text-xl font-black">${hours}</span><span class="text-[10px] opacity-60">時</span></div>
+            <div class="bg-white/10 p-3 rounded-xl text-center"><span class="block text-xl font-black">${minutes}</span><span class="text-[10px] opacity-60">分</span></div>
+            <div class="bg-white/10 p-3 rounded-xl text-center"><span class="block text-xl font-black">${seconds}</span><span class="text-[10px] opacity-60">秒</span></div>
+        `;
+    }
+
+    updateClock();
+    const timeinterval = setInterval(updateClock, 1000);
+    return timeinterval;
+}
+
+/**
+ * 2. 行程時間重疊衝突檢查演算法
+ * 採用 O(N log N) 或 O(N^2) 精確時間軸區間比對演算法
+ * @param {Array} items - 行程物件陣列 (含 startTime, endTime, id)
+ * @returns {Object} 衝突的 id 對照映射 Map (值為 true 代表衝突)
+ */
+export function checkItineraryConflicts(items) {
+    const conflicts = {};
+    for (let i = 0; i < items.length; i++) {
+        for (let j = i + 1; j < items.length; j++) {
+            const itemA = items[i];
+            const itemB = items[j];
+            
+            // 轉換為純分鐘數進行數值區間重疊比對
+            const startA = convertTimeToMinutes(itemA.startTime);
+            const endA = convertTimeToMinutes(itemA.endTime);
+            const startB = convertTimeToMinutes(itemB.startTime);
+            const endB = convertTimeToMinutes(itemB.endTime);
+
+            // 判斷區間是否交疊：StartA < EndB 且 StartB < EndA
+            if (startA < endB && startB < endA) {
+                conflicts[itemA.id] = true;
+                conflicts[itemB.id] = true;
+            }
+        }
+    }
+    return conflicts;
+}
+
+/**
+ * 輔助轉換 "HH:MM" 格式為當天總分鐘數
+ */
+function convertTimeToMinutes(timeStr) {
+    const [hrs, mins] = timeStr.split(':').map(Number);
+    return hrs * 60 + mins;
+}
+
+/**
+ * 3. Splitwise 轉帳債務最佳化演算法
+ * 採用「貪婪演算法 (Greedy Algorithm)」最小化全局轉帳次數機制。
+ * @param {Array} expenses - 流水帳明細陣列 (含 amount, paidBy, splitWith 陣列)
+ * @returns {Array} 優化後的轉帳指令陣列 (含 from, to, amount)
+ */
+export function calculateSplitwiseDebts(expenses) {
+    const netBalances = {}; // 紀錄每名使用者的淨欠款/應收總額
+
+    // 階段 A：計算每個人最終的應收與應付淨值
+    expenses.forEach(exp => {
+        const shareAmount = exp.amount / exp.splitWith.length;
+        
+        // 付款人賺取全局金額
+        netBalances[exp.paidBy] = (netBalances[exp.paidBy] || 0) + exp.amount;
+        
+        // 每位參與分攤者扣除對應應付份額
+        exp.splitWith.forEach(person => {
+            netBalances[person] = (netBalances[person] || 0) - shareAmount;
+        });
+    });
+
+    // 階段 B：區分出兩大陣列：應收款者清單(Creditors)與欠款者清單(Debtors)
+    const debtors = [];
+    const creditors = [];
+
+    Object.keys(netBalances).forEach(person => {
+        const bal = netBalances[person];
+        // 浮點數誤差修正安全處理
+        if (bal < -0.01) {
+            debtors.push({ name: person, balance: bal });
+        } else if (bal > 0.01) {
+            creditors.push({ name: person, balance: bal });
+        }
+    });
+
+    const transfers = [];
+
+    // 階段 C：使用貪婪雙指針策略進行全局最小轉帳配對
+    let dIdx = 0;
+    let cIdx = 0;
+
+    while (dIdx < debtors.length && cIdx < creditors.length) {
+        const debtor = debtors[dIdx];
+        const creditor = creditors[cIdx];
+
+        const owedAmount = Math.min(-debtor.balance, creditor.balance);
+
+        transfers.push({
+            from: debtor.name,
+            to: creditor.name,
+            amount: owedAmount
+        });
+
+        debtor.balance += owedAmount;
+        creditor.balance -= owedAmount;
+
+        if (Math.abs(debtor.balance) < 0.01) dIdx++;
+        if (Math.abs(creditor.balance) < 0.01) cIdx++;
+    }
+
+    return transfers;
+}
+
+/**
+ * 4. 防抖演算法 (Debounce)
+ */
+export function debounce(func, delay) {
+    let timeoutId = null;
+    return function (...args) {
+        const context = this;
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            func.apply(context, args);
+        }, delay);
+    };
+}
+
+/**
+ * 5. 節流演算法 (Throttle)
+ */
+export function throttle(func, limit) {
+    let inThrottle = false;
+    return function (...args) {
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => { inThrottle = false; }, limit);
+        }
+    };
+}
