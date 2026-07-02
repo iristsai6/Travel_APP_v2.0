@@ -6,7 +6,7 @@
 
 import { initializeFirebase } from "./firebase.js";
 import { observeAuthState } from "./auth.js";
-import { renderHomePage, renderOnboardingPage } from "#/home.js";
+import { renderHomePage, renderOnboardingPage } from "./home.js";
 import { renderItineraryPage } from "./itinerary.js";
 import { renderFinancePage } from "./finance.js";
 import { renderMapPage } from "./map.js";
